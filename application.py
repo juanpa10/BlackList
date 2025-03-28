@@ -14,16 +14,16 @@ db = SQLAlchemy(app)
 ma = Marshmallow(app)
 api = Api(app)
 
-STATIC_TOKEN = "Bearer mysecrettoken"
+STATIC_TOKEN = "Bearer blackSecretToken"
 
 
 # Modelo de datos para la lista negra
 class Blacklist(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(255), nullable=False)
-    app_uuid = db.Column(db.String(36), nullable=False)  # UUID (36 caracteres)
+    app_uuid = db.Column(db.String(36), nullable=False)
     blocked_reason = db.Column(db.String(255), nullable=True)
-    ip_address = db.Column(db.String(45), nullable=False)  # Soporta IPv4 e IPv6
+    ip_address = db.Column(db.String(45), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     def __init__(self, email, app_uuid, blocked_reason, ip_address):
