@@ -17,7 +17,6 @@ api = Api(app)
 
 STATIC_TOKEN = "Bearer blackSecretToken"
 
-
 # Modelo de datos para la lista negra
 class Blacklist(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -33,17 +32,14 @@ class Blacklist(db.Model):
         self.blocked_reason = blocked_reason
         self.ip_address = ip_address
 
-
 # Esquema para la serialización de datos usando Marshmallow
 class BlacklistSchema(ma.SQLAlchemyAutoSchema):
     class Meta:
         model = Blacklist
         load_instance = True
 
-
 blacklist_schema = BlacklistSchema()
 blacklists_schema = BlacklistSchema(many=True)
-
 
 # Decorador para verificar el token de autorización
 def token_required(func):
@@ -53,9 +49,7 @@ def token_required(func):
         if auth != STATIC_TOKEN:
             return jsonify({'message': 'Token ausente o inválido'}), 401
         return func(*args, **kwargs)
-
     return decorated
-
 
 # Endpoint para agregar un email a la lista negra: POST /blacklists
 class BlacklistAdd(Resource):
@@ -67,7 +61,7 @@ class BlacklistAdd(Resource):
 
         email = data.get('email')
         app_uuid_value = data.get('app_uuid')
-        blocked_reason = data.get('blocked_reason')
+        blocked_reason = data.get('blocked_reason')  # Campo opcional
 
         if not email or not app_uuid_value:
             return {'message': 'Se requieren los campos email y app_uuid'}, 400
@@ -91,7 +85,6 @@ class BlacklistAdd(Resource):
 
         return {'message': 'Email agregado a la lista negra correctamente'}, 201
 
-
 # Endpoint para consultar si un email está en la lista negra: GET /blacklists/<email>
 class BlacklistCheck(Resource):
     @token_required
@@ -102,14 +95,12 @@ class BlacklistCheck(Resource):
         else:
             return {'blacklisted': False, 'blocked_reason': None}, 200
 
-
 # Endpoint de health check
 class HealthCheck(Resource):
-    @staticmethod
-    def get():
+    def get(self):
         return {'healthy': True}, 200
 
-
+# Registro de endpoints
 api.add_resource(BlacklistAdd, '/blacklists')
 api.add_resource(BlacklistCheck, '/blacklists/<string:email>')
 api.add_resource(HealthCheck, '/health')
