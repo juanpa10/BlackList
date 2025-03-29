@@ -1,6 +1,6 @@
 from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
-from flask_restx import Api, Resource
+from flask_restful import Api, Resource
 from flask_marshmallow import Marshmallow
 from datetime import datetime
 import uuid
@@ -15,8 +15,8 @@ db = SQLAlchemy(app)
 ma = Marshmallow(app)
 api = Api(app)
 
-
 STATIC_TOKEN = "Bearer blackSecretToken"
+
 
 # Modelo de datos para la lista negra
 class Blacklist(db.Model):
@@ -27,11 +27,12 @@ class Blacklist(db.Model):
     ip_address = db.Column(db.String(45), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-    def __init__(self, email: str, app_uuid: str, blocked_reason: str, ip_address: str):
+    def __init__(self, email, app_uuid, blocked_reason, ip_address):
         self.email = email
         self.app_uuid = app_uuid
         self.blocked_reason = blocked_reason
         self.ip_address = ip_address
+
 
 # Esquema para la serialización de datos usando Marshmallow
 class BlacklistSchema(ma.SQLAlchemyAutoSchema):
@@ -39,8 +40,10 @@ class BlacklistSchema(ma.SQLAlchemyAutoSchema):
         model = Blacklist
         load_instance = True
 
+
 blacklist_schema = BlacklistSchema()
 blacklists_schema = BlacklistSchema(many=True)
+
 
 # Decorador para verificar el token de autorización
 def token_required(func):
@@ -50,20 +53,21 @@ def token_required(func):
         if auth != STATIC_TOKEN:
             return jsonify({'message': 'Token ausente o inválido'}), 401
         return func(*args, **kwargs)
+
     return decorated
+
 
 # Endpoint para agregar un email a la lista negra: POST /blacklists
 class BlacklistAdd(Resource):
     @token_required
     def post(self):
-        # Se fuerza la conversión a JSON en caso de cabeceras poco estándar
         data = request.get_json(force=True)
         if not data:
             return {'message': 'No se proporcionaron datos de entrada'}, 400
 
         email = data.get('email')
         app_uuid_value = data.get('app_uuid')
-        blocked_reason = data.get('blocked_reason')  # Campo opcional
+        blocked_reason = data.get('blocked_reason')
 
         if not email or not app_uuid_value:
             return {'message': 'Se requieren los campos email y app_uuid'}, 400
@@ -87,19 +91,22 @@ class BlacklistAdd(Resource):
 
         return {'message': 'Email agregado a la lista negra correctamente'}, 201
 
+
 # Endpoint para consultar si un email está en la lista negra: GET /blacklists/<email>
 class BlacklistCheck(Resource):
     @token_required
-    def get(self, email: str):
+    def get(self, email):
         entry = Blacklist.query.filter_by(email=email).first()
         if entry:
             return {'blacklisted': True, 'blocked_reason': entry.blocked_reason}, 200
         else:
             return {'blacklisted': False, 'blocked_reason': None}, 200
 
+
 # Endpoint de health check
 class HealthCheck(Resource):
-    def get(self):
+    @staticmethod
+    def get():
         return {'healthy': True}, 200
 
 
