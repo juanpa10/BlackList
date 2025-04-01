@@ -1,11 +1,21 @@
 from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
+import os
 from datetime import datetime
 import uuid
 from functools import wraps
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///blacklist.db'
+
+# 🔹 Obtener valores desde las variables de entorno
+DB_HOST = os.getenv("DB_HOST", "localhost")  # Endpoint de RDS
+DB_PORT = os.getenv("DB_PORT", "3306")  # Cambia a 5432 si usas PostgreSQL
+DB_NAME = os.getenv("DB_NAME", "nombre_de_tu_bd")
+DB_USER = os.getenv("DB_USER", "usuario")
+DB_PASSWORD = os.getenv("DB_PASSWORD", "contraseña")
+
+app.config['SQLALCHEMY_DATABASE_URI'] = f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+#app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///blacklist.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
