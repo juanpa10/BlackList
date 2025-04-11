@@ -34,20 +34,21 @@ class TestBlacklistEndpoints:
             'blocked_reason': 'Spam activity'
         }
         
-        with patch('application.Blacklist') as MockBlacklist:
-            mock_instance = MagicMock()
-            MockBlacklist.return_value = mock_instance
-            
-            with patch('application.db.session.add'), patch('application.db.session.commit'):
-                response = client.post(
-                    '/blacklists',
-                    data=json.dumps(test_data),
-                    headers=self.AUTH_HEADERS,
-                    content_type='application/json'
-                )
+        with app.app_context():
+            with patch('application.Blacklist') as MockBlacklist:
+                mock_instance = MagicMock()
+                MockBlacklist.return_value = mock_instance
                 
-                assert response.status_code == 201
-                assert response.json == {'message': 'Email agregado a la lista negra correctamente'}
+                with patch('application.db.session.add'), patch('application.db.session.commit'):
+                    response = client.post(
+                        '/blacklists',
+                        data=json.dumps(test_data),
+                        headers=self.AUTH_HEADERS,
+                        content_type='application/json'
+                    )
+                    
+                    assert response.status_code == 201
+                    assert response.json == {'message': 'Email agregado a la lista negra correctamente'}
 
     def test_add_blacklist_missing_token(self, client):
         """Test adding to blacklist with missing auth token."""
@@ -131,46 +132,50 @@ class TestBlacklistEndpoints:
         """Test checking if an email is blacklisted (found)."""
         test_email = 'blacklisted@example.com'
         
-        with patch('application.Blacklist.query') as mock_query:
-            mock_query.filter_by.return_value.first.return_value = MagicMock(
-                email=test_email,
-                blocked_reason='Spam activity'
-            )
-            
-            response = client.get(
-                f'/blacklists/{test_email}',
-                headers=self.AUTH_HEADERS
-            )
-            
-            assert response.status_code == 200
-            assert response.json == {
-                'blacklisted': True,
-                'blocked_reason': 'Spam activity'
-            }
-            
-            # Verify the mock was called with the correct email
-            mock_query.filter_by.assert_called_once_with(email=test_email)
+        # Using app_context to avoid "Working outside of application context" error
+        with app.app_context():
+            with patch('application.Blacklist.query') as mock_query:
+                mock_query.filter_by.return_value.first.return_value = MagicMock(
+                    email=test_email,
+                    blocked_reason='Spam activity'
+                )
+                
+                response = client.get(
+                    f'/blacklists/{test_email}',
+                    headers=self.AUTH_HEADERS
+                )
+                
+                assert response.status_code == 200
+                assert response.json == {
+                    'blacklisted': True,
+                    'blocked_reason': 'Spam activity'
+                }
+                
+                # Verify the mock was called with the correct email
+                mock_query.filter_by.assert_called_once_with(email=test_email)
 
     def test_check_blacklist_not_found(self, client):
         """Test checking if an email is blacklisted (not found)."""
         test_email = 'clean@example.com'
         
-        with patch('application.Blacklist.query') as mock_query:
-            mock_query.filter_by.return_value.first.return_value = None
-            
-            response = client.get(
-                f'/blacklists/{test_email}',
-                headers=self.AUTH_HEADERS
-            )
-            
-            assert response.status_code == 200
-            assert response.json == {
-                'blacklisted': False,
-                'blocked_reason': None
-            }
-            
-            # Verify the mock was called with the correct email
-            mock_query.filter_by.assert_called_once_with(email=test_email)
+        # Using app_context to avoid "Working outside of application context" error
+        with app.app_context():
+            with patch('application.Blacklist.query') as mock_query:
+                mock_query.filter_by.return_value.first.return_value = None
+                
+                response = client.get(
+                    f'/blacklists/{test_email}',
+                    headers=self.AUTH_HEADERS
+                )
+                
+                assert response.status_code == 200
+                assert response.json == {
+                    'blacklisted': False,
+                    'blocked_reason': None
+                }
+                
+                # Verify the mock was called with the correct email
+                mock_query.filter_by.assert_called_once_with(email=test_email)
 
     def test_check_blacklist_missing_token(self, client):
         """Test checking blacklist without auth token."""
