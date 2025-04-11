@@ -1,11 +1,16 @@
 from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 import os
+from dotenv import load_dotenv
 from datetime import datetime
 import uuid
 from functools import wraps
 
+# Configuración de la aplicación Flask
 app = Flask(__name__)
+
+# Cargar variables de entorno desde el archivo .env
+load_dotenv()
 
 # 🔹 Obtener valores desde las variables de entorno
 DB_HOST = os.getenv("DB_HOST", "localhost")
@@ -99,4 +104,4 @@ def health_check():
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
-    app.run(host='0.0.0.0', port=80)
+    app.run(host='0.0.0.0', port=80, debug=False)
