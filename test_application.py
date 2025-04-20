@@ -9,11 +9,11 @@ INVALID_AUTH_HEADERS = {'Authorization': 'Bearer wrongToken'}
 @pytest.fixture
 def client():
     # ⚙️ Setea valores dummy para evitar conexión real
-    os.environ['DB_HOST'] = ''
-    os.environ['DB_PORT'] = ''
-    os.environ['DB_NAME'] = ''
-    os.environ['DB_USER'] = ''
-    os.environ['DB_PASSWORD'] = ''
+    os.environ['DB_HOST'] = 'localhost'
+    os.environ['DB_PORT'] = '5432'
+    os.environ['DB_NAME'] = 'test_db'
+    os.environ['DB_USER'] = 'user'
+    os.environ['DB_PASSWORD'] = 'password'
 
     app = create_app()
     app.config['TESTING'] = True
