@@ -96,9 +96,11 @@ def create_app(test_config=None):
 
     return app
 
-# ✅ Main para producción
+# ✅ Instancia global para Gunicorn
+app = create_app()
+
+# Solo ejecuta si corres python application.py directamente
 if __name__ == '__main__':
-    app = create_app()
     with app.app_context():
         db.create_all()
     app.run(host='0.0.0.0', port=80, debug=False)
