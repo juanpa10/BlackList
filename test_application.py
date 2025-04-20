@@ -5,17 +5,18 @@ import pytest
 AUTH_HEADERS = {'Authorization': 'Bearer blackSecretToken'}
 INVALID_AUTH_HEADERS = {'Authorization': 'Bearer wrongToken'}
 
-
 @pytest.fixture
 def client():
-    # 🔧 Esto evita que application.py se conecte a PostgreSQL al importar
-    os.environ['DB_HOST'] = ''
-    os.environ['DB_PORT'] = ''
-    os.environ['DB_NAME'] = ''
-    os.environ['DB_USER'] = ''
-    os.environ['DB_PASSWORD'] = ''
+    # ✅ Valores dummy válidos para evitar fallos de conversión en int()
+    os.environ['DB_HOST'] = 'dummy'
+    os.environ['DB_PORT'] = '5432'  # tiene que ser un número
+    os.environ['DB_NAME'] = 'dummy'
+    os.environ['DB_USER'] = 'dummy'
+    os.environ['DB_PASSWORD'] = 'dummy'
 
-    from application import app, db  # ⏳ ahora sí lo importamos con env listo
+    # ⏳ Importamos después de setear entorno
+    from application import app, db
+
     app.config['TESTING'] = True
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
 
@@ -25,7 +26,6 @@ def client():
         yield client
         with app.app_context():
             db.drop_all()
-
 
 def test_health_check(client):
     response = client.get('/health')
