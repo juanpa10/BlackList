@@ -1,22 +1,21 @@
 import os
 import json
 import pytest
+from application import create_app, db, Blacklist  # 👈 importa create_app y modelos
 
 AUTH_HEADERS = {'Authorization': 'Bearer blackSecretToken'}
 INVALID_AUTH_HEADERS = {'Authorization': 'Bearer wrongToken'}
 
 @pytest.fixture
 def client():
-    # ✅ Valores dummy válidos para evitar fallos de conversión en int()
-    os.environ['DB_HOST'] = 'dummy'
-    os.environ['DB_PORT'] = '5432'  # tiene que ser un número
-    os.environ['DB_NAME'] = 'dummy'
-    os.environ['DB_USER'] = 'dummy'
-    os.environ['DB_PASSWORD'] = 'dummy'
+    # ⚙️ Setea valores dummy para evitar conexión real
+    os.environ['DB_HOST'] = ''
+    os.environ['DB_PORT'] = ''
+    os.environ['DB_NAME'] = ''
+    os.environ['DB_USER'] = ''
+    os.environ['DB_PASSWORD'] = ''
 
-    # ⏳ Importamos después de setear entorno
-    from application import app, db
-
+    app = create_app()
     app.config['TESTING'] = True
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
 
@@ -27,14 +26,14 @@ def client():
         with app.app_context():
             db.drop_all()
 
+# ✅ Test de health check
 def test_health_check(client):
     response = client.get('/health')
     assert response.status_code == 200
     assert response.json == {'healthy': True}
 
-
+# ✅ Test de éxito al agregar a la lista negra
 def test_add_blacklist_success(client):
-    from application import db, Blacklist
     test_data = {
         'email': 'test@example.com',
         'app_uuid': '12345678-1234-5678-1234-567812345678',
@@ -45,7 +44,7 @@ def test_add_blacklist_success(client):
     assert response.status_code == 201
     assert response.json == {'message': 'Email agregado a la lista negra correctamente'}
 
-
+# ✅ Test cuando falta el token
 def test_add_blacklist_missing_token(client):
     test_data = {
         'email': 'test@example.com',
@@ -55,9 +54,8 @@ def test_add_blacklist_missing_token(client):
                            content_type='application/json')
     assert response.status_code == 401
 
-
+# ✅ Test de verificación de email en la lista negra
 def test_check_blacklist_found(client):
-    from application import db, Blacklist
     entry = Blacklist(
         email='blacklisted@example.com',
         app_uuid='12345678-1234-5678-1234-567812345678',

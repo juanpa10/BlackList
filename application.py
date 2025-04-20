@@ -6,28 +6,10 @@ from datetime import datetime
 import uuid
 from functools import wraps
 
-# Configuración de la aplicación Flask
-app = Flask(__name__)
-
-# Cargar variables de entorno desde el archivo .env
-load_dotenv()
-
-# 🔹 Obtener valores desde las variables de entorno
-DB_HOST = os.getenv("DB_HOST", "localhost")
-DB_PORT = os.getenv("DB_PORT", "3306")
-DB_NAME = os.getenv("DB_NAME", "nombre_de_tu_bd")
-DB_USER = os.getenv("DB_USER", "usuario")
-DB_PASSWORD = os.getenv("DB_PASSWORD", "contraseña")
-
-app.config['SQLALCHEMY_DATABASE_URI'] = f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-
-db = SQLAlchemy(app)
-
+db = SQLAlchemy()
 STATIC_TOKEN = "Bearer blackSecretToken"
 
-
-# Modelo de datos para la lista negra
+# 🔧 Modelo de datos
 class Blacklist(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(255), nullable=False)
@@ -42,8 +24,7 @@ class Blacklist(db.Model):
         self.blocked_reason = blocked_reason
         self.ip_address = ip_address
 
-
-# Decorador para verificar el token de autorización
+# 🔧 Decorador
 def token_required(func):
     @wraps(func)
     def decorated(*args, **kwargs):
@@ -51,57 +32,70 @@ def token_required(func):
         if auth != STATIC_TOKEN:
             return jsonify({'message': 'Token ausente o inválido'}), 401
         return func(*args, **kwargs)
-
     return decorated
 
+# ✅ Factory method
+def create_app():
+    load_dotenv()
+    app = Flask(__name__)
 
-# Endpoint para agregar un email a la lista negra (POST /blacklists)
-@app.route('/blacklists', methods=['POST'])
-@token_required
-def add_blacklist():
-    data = request.get_json(force=True)
-    if not data:
-        return jsonify({'message': 'No se proporcionaron datos de entrada'}), 400
+    DB_HOST = os.getenv("DB_HOST", "localhost")
+    DB_PORT = os.getenv("DB_PORT", "3306")
+    DB_NAME = os.getenv("DB_NAME", "nombre_de_tu_bd")
+    DB_USER = os.getenv("DB_USER", "usuario")
+    DB_PASSWORD = os.getenv("DB_PASSWORD", "contraseña")
 
-    email = data.get('email')
-    app_uuid_value = data.get('app_uuid')
-    blocked_reason = data.get('blocked_reason')
+    app.config['SQLALCHEMY_DATABASE_URI'] = f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-    if not email or not app_uuid_value:
-        return jsonify({'message': 'Se requieren los campos email y app_uuid'}), 400
+    db.init_app(app)
 
-    try:
-        uuid.UUID(app_uuid_value)
-    except ValueError:
-        return jsonify({'message': 'Formato inválido para app_uuid'}), 400
+    # Routes
+    @app.route('/blacklists', methods=['POST'])
+    @token_required
+    def add_blacklist():
+        data = request.get_json(force=True)
+        if not data:
+            return jsonify({'message': 'No se proporcionaron datos de entrada'}), 400
 
-    ip_address = request.remote_addr or '0.0.0.0'
+        email = data.get('email')
+        app_uuid_value = data.get('app_uuid')
+        blocked_reason = data.get('blocked_reason')
 
-    new_entry = Blacklist(email, app_uuid_value, blocked_reason, ip_address)
-    db.session.add(new_entry)
-    db.session.commit()
+        if not email or not app_uuid_value:
+            return jsonify({'message': 'Se requieren los campos email y app_uuid'}), 400
 
-    return jsonify({'message': 'Email agregado a la lista negra correctamente'}), 201
+        try:
+            uuid.UUID(app_uuid_value)
+        except ValueError:
+            return jsonify({'message': 'Formato inválido para app_uuid'}), 400
 
+        ip_address = request.remote_addr or '0.0.0.0'
+        new_entry = Blacklist(email, app_uuid_value, blocked_reason, ip_address)
 
-# Endpoint para consultar si un email está en la lista negra (GET /blacklists/<email>)
-@app.route('/blacklists/<string:email>', methods=['GET'])
-@token_required
-def check_blacklist(email):
-    entry = Blacklist.query.filter_by(email=email).first()
-    if entry:
-        return jsonify({'blacklisted': True, 'blocked_reason': entry.blocked_reason}), 200
-    else:
-        return jsonify({'blacklisted': False, 'blocked_reason': None}), 200
+        db.session.add(new_entry)
+        db.session.commit()
 
+        return jsonify({'message': 'Email agregado a la lista negra correctamente'}), 201
 
-# Endpoint de health check (GET /health)
-@app.route('/health', methods=['GET'])
-def health_check():
-    return jsonify({'healthy': True}), 200
+    @app.route('/blacklists/<string:email>', methods=['GET'])
+    @token_required
+    def check_blacklist(email):
+        entry = Blacklist.query.filter_by(email=email).first()
+        if entry:
+            return jsonify({'blacklisted': True, 'blocked_reason': entry.blocked_reason}), 200
+        else:
+            return jsonify({'blacklisted': False, 'blocked_reason': None}), 200
 
+    @app.route('/health', methods=['GET'])
+    def health_check():
+        return jsonify({'healthy': True}), 200
 
+    return app
+
+# ✅ Main para producción
 if __name__ == '__main__':
+    app = create_app()
     with app.app_context():
         db.create_all()
     app.run(host='0.0.0.0', port=80, debug=False)
