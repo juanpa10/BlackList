@@ -35,18 +35,21 @@ def token_required(func):
     return decorated
 
 # ✅ Factory method
-def create_app():
+def create_app(test_config=None):
     load_dotenv()
     app = Flask(__name__)
 
-    DB_HOST = os.getenv("DB_HOST", "localhost")
-    DB_PORT = os.getenv("DB_PORT", "3306")
-    DB_NAME = os.getenv("DB_NAME", "nombre_de_tu_bd")
-    DB_USER = os.getenv("DB_USER", "usuario")
-    DB_PASSWORD = os.getenv("DB_PASSWORD", "contraseña")
+    if test_config:
+        app.config.update(test_config)
+    else:
+        DB_HOST = os.getenv("DB_HOST", "localhost")
+        DB_PORT = os.getenv("DB_PORT", "5432")
+        DB_NAME = os.getenv("DB_NAME", "nombre_de_tu_bd")
+        DB_USER = os.getenv("DB_USER", "usuario")
+        DB_PASSWORD = os.getenv("DB_PASSWORD", "contraseña")
 
-    app.config['SQLALCHEMY_DATABASE_URI'] = f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
-    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+        app.config['SQLALCHEMY_DATABASE_URI'] = f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+        app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
     db.init_app(app)
 

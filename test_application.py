@@ -8,16 +8,15 @@ INVALID_AUTH_HEADERS = {'Authorization': 'Bearer wrongToken'}
 
 @pytest.fixture
 def client():
-    # ⚙️ Setea valores dummy para evitar conexión real
-    os.environ['DB_HOST'] = 'localhost'
-    os.environ['DB_PORT'] = '5432'
-    os.environ['DB_NAME'] = 'test_db'
-    os.environ['DB_USER'] = 'user'
-    os.environ['DB_PASSWORD'] = 'password'
+    from application import create_app, db
 
-    app = create_app()
-    app.config['TESTING'] = True
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
+    test_config = {
+        'TESTING': True,
+        'SQLALCHEMY_DATABASE_URI': 'sqlite:///:memory:',
+        'SQLALCHEMY_TRACK_MODIFICATIONS': False
+    }
+
+    app = create_app(test_config)
 
     with app.test_client() as client:
         with app.app_context():
