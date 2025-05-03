@@ -1,13 +1,71 @@
 version: 0.2
 
+env:
+  variables:
+    # URI de repositorio ECR
+    REPOSITORY_URI: 478681635279.dkr.ecr.us-east-1.amazonaws.com/python_app
+    AWS_DEFAULT_REGION: us-east-1
+
 phases:
   install:
     commands:
-      - pip install -r requirements.txt
+      - echo "Instalando dependencias de Python..."
+      - pip install --no-cache-dir -r requirements.txt
+
+  pre_build:
+    commands:
+      - echo "Autenticando en ECR..."
+      - |
+        aws ecr get-login-password \
+          --region $AWS_DEFAULT_REGION \
+        | docker login \
+          --username AWS \
+          --password-stdin $REPOSITORY_URI
+
+      - echo "Obteniendo tag de imagen (commit SHA corto)..."
+      - IMAGE_TAG=${CODEBUILD_RESOLVED_SOURCE_VERSION:0:7}
+      - echo "Image tag será: $IMAGE_TAG"
+
   build:
     commands:
-      - echo "Running unit tests..."
-      - pytest
+      - echo "✅ Ejecutando unit tests con DB de desarrollo..."
+      - pytest --maxfail=1 --disable-warnings -q
+
+      - echo "🔧 Construyendo la imagen Docker..."
+      - docker build \
+          --build-arg DB_HOST="$DB_HOST" \
+          --build-arg DB_PORT="$DB_PORT" \
+          --build-arg DB_NAME="$DB_NAME" \
+          --build-arg DB_USER="$DB_USER" \
+          --build-arg DB_PASSWORD="$DB_PASSWORD" \
+          -t $REPOSITORY_URI:$IMAGE_TAG \
+          -t $REPOSITORY_URI:latest .
+
+  post_build:
+    commands:
+      - echo "📦 Pushing de la imagen a ECR..."
+      - docker push $REPOSITORY_URI:$IMAGE_TAG
+      - docker push $REPOSITORY_URI:latest
+
+      - echo "📝 Generando imagedefinitions.json..."
+      - printf '[{"name":"python_app","imageUri":"%s"}]' $REPOSITORY_URI:$IMAGE_TAG \
+          > imagedefinitions.json
+
+      - echo "📝 Generando imageDetail.json..."
+      - printf '{"ImageURI":"%s"}' $REPOSITORY_URI:$IMAGE_TAG \
+          > imageDetail.json
+
 artifacts:
   files:
     - '**/*'
+    - imagedefinitions.json
+    - imageDetail.json
+
+  secondary-artifacts:
+    DefinitionArtifact:
+      files:
+        - appspec.yaml
+        - taskdef.json
+    ImageArtifact:
+      files:
+        - imageDetail.json

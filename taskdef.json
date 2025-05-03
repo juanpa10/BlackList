@@ -1,0 +1,24 @@
+{
+  "executionRoleArn": "arn:aws:iam::478681635279:role/ecsTaskExecutionRole",
+  "family": "Task-app-python",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": [
+    "FARGATE"
+  ],
+  "cpu": "512",
+  "memory": "1024",
+  "containerDefinitions": [
+    {
+      "name": "Container-app-python",
+      "image": "<IMAGE1_NAME>",
+      "essential": true,
+      "portMappings": [
+        {
+          "containerPort": 5000,
+          "hostPort": 5000,
+          "protocol": "tcp"
+        }
+      ]
+    }
+  ]
+}
