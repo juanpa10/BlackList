@@ -8,20 +8,23 @@ env:
 phases:
   install:
     runtime-versions:
-      python: 3.9          
+      python: 3.9
     commands:
-      - echo "Instalando AWS CLI v2 para get-login-password..."
+      - echo "Instalando AWS CLI v2..."
       - curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
       - unzip awscliv2.zip
       - sudo ./aws/install --update
-      - aws --version
+      - /usr/local/bin/aws --version
       - echo "Instalando dependencias de Python…"
       - pip install --no-cache-dir -r requirements.txt
 
   pre_build:
     commands:
-      - echo "Logging in to Amazon ECR..."
-      - aws ecr get-login-password --region $AWS_DEFAULT_REGION \
+      - |
+        echo "Logging in to Amazon ECR..."
+        # Llamamos directo al aws v2 que acabamos de instalar
+        /usr/local/bin/aws ecr get-login-password \
+          --region $AWS_DEFAULT_REGION \
         | docker login --username AWS --password-stdin $REPOSITORY_URI
 
   build:
