@@ -22,7 +22,6 @@ phases:
     commands:
       - |
         echo "Logging in to Amazon ECR..."
-        # Llamamos directo al aws v2 que acabamos de instalar
         /usr/local/bin/aws ecr get-login-password \
           --region $AWS_DEFAULT_REGION \
         | docker login --username AWS --password-stdin $REPOSITORY_URI
@@ -46,15 +45,7 @@ phases:
 
 artifacts:
   files:
-    - '**/*'
+    - appspec.json
+    - taskdef.json
     - imagedefinitions.json
     - imageDetail.json
-
-  secondary-artifacts:
-    DefinitionArtifact:
-      files:
-        - appspec.json
-        - taskdef.json
-    ImageArtifact:
-      files:
-        - imageDetail.json
