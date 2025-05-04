@@ -16,7 +16,9 @@ phases:
       - echo "AWS_DEFAULT_REGION=$AWS_DEFAULT_REGION"
       - echo "REPOSITORY_URI=$REPOSITORY_URI"
       - echo "Autenticando en Amazon ECR..."
-      - aws ecr get-login --region $AWS_DEFAULT_REGION --no-include-email | sh
+      - LOGIN_CMD=$(aws ecr get-login --region $AWS_DEFAULT_REGION --no-include-email)
+      - echo "$LOGIN_CMD"
+      - eval $LOGIN_CMD
 
   build:
     commands:
@@ -31,7 +33,11 @@ phases:
     commands:
       - echo "📦 Subiendo la imagen a ECR…"
       - docker push $REPOSITORY_URI:latest
-      - echo "✅ Push completado."
+      - echo "📝 Generando imagedefinitions.json apuntando a latest…"
+      - printf '[{"name":"python_app","imageUri":"%s"}]' $REPOSITORY_URI:latest > imagedefinitions.json
+      - echo "📝 Generando imageDetail.json apuntando a latest…"
+      - printf '{"ImageURI":"%s"}' $REPOSITORY_URI:latest > imageDetail.json
+      - echo "✅ Push y generación de artefactos completados."
 
 artifacts:
   files:
