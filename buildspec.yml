@@ -28,17 +28,18 @@ phases:
 
   build:
     commands:
-      - echo "Build started on `date`"
-      - echo "Building the Docker image…"
+      - echo "🔍 Ejecutando unit tests…"
+      - pytest --maxfail=1 --disable-warnings -q
+      - echo "✅ Tests pasados. Iniciando build de la imagen…"
       - docker build -t python_app:latest .
       - docker tag python_app:latest $REPOSITORY_URI:latest
 
   post_build:
     commands:
-      - echo "Build completed on `date`"
-      - echo "Pushing the Docker image…"
+      - echo "🚀 Build completado en `date`"
+      - echo "Pushing la imagen a ECR…"
       - docker push $REPOSITORY_URI:latest
-      - echo "Writing Image Definitions file…"
+      - echo "Generando imagedefinitions.json e imageDetail.json…"
       - printf '[{"name":"Container-app-python","imageUri":"%s"}]' $REPOSITORY_URI:latest > imagedefinitions.json
       - printf '{"ImageURI":"%s"}' $REPOSITORY_URI:latest > imageDetail.json
       - cat imagedefinitions.json
