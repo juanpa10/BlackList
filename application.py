@@ -92,7 +92,7 @@ def create_app(test_config=None):
 
     @app.route('/health', methods=['GET'])
     def health_check():
-        return jsonify({'FARGATE DEPLOY': True}), 200
+        return jsonify({'FARGATE DEPLOY FINAL': True}), 200
 
     return app
 

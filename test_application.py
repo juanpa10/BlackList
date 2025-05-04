@@ -29,7 +29,7 @@ def client():
 def test_health_check(client):
     response = client.get('/health')
     assert response.status_code == 200
-    assert response.json == {'FARGATE DEPLOY': True}
+    assert response.json == {'FARGATE DEPLOY FINAL': True}
 
 # ✅ Test de éxito al agregar a la lista negra
 def test_add_blacklist_success(client):
