@@ -2,52 +2,35 @@ version: 0.2
 
 env:
   variables:
-    # URI de repositorio ECR
     REPOSITORY_URI: 478681635279.dkr.ecr.us-east-1.amazonaws.com/python_app
     AWS_DEFAULT_REGION: us-east-1
 
 phases:
   install:
     commands:
-      - echo "Instalando dependencias de Python..."
+      - echo "Instalando dependencias de Python…"
       - pip install --no-cache-dir -r requirements.txt
 
   pre_build:
     commands:
-      - echo "Autenticando en ECR..."
-      - |
-        aws ecr get-login-password \
-          --region $AWS_DEFAULT_REGION \
-        | docker login \
-          --username AWS \
-          --password-stdin $REPOSITORY_URI
+      - echo "Autenticando en ECR…"
+      - aws ecr get-login-password --region $AWS_DEFAULT_REGION \
+        | docker login --username AWS --password-stdin $REPOSITORY_URI
 
   build:
     commands:
-      - echo "✅ Ejecutando unit tests con DB de desarrollo..."
+      - echo "✅ Ejecutando tests unitarios…"
       - pytest --maxfail=1 --disable-warnings -q
-
-      - echo "🔧 Construyendo la imagen Docker con tag latest..."
-      - docker build \
-          --build-arg DB_HOST="$DB_HOST" \
-          --build-arg DB_PORT="$DB_PORT" \
-          --build-arg DB_NAME="$DB_NAME" \
-          --build-arg DB_USER="$DB_USER" \
-          --build-arg DB_PASSWORD="$DB_PASSWORD" \
-          -t $REPOSITORY_URI:latest .
+      - echo "🔧 Construyendo la imagen Docker…"
+      - docker build -t python_app .
+      - echo "🏷  Etiquetando la imagen para ECR…"
+      - docker tag python_app:latest $REPOSITORY_URI:latest
 
   post_build:
     commands:
-      - echo "📦 Pushing de la imagen latest a ECR..."
+      - echo "📦 Subiendo la imagen a ECR…"
       - docker push $REPOSITORY_URI:latest
-
-      - echo "📝 Generando imagedefinitions.json apuntando a latest..."
-      - printf '[{"name":"python_app","imageUri":"%s"}]' $REPOSITORY_URI:latest \
-          > imagedefinitions.json
-
-      - echo "📝 Generando imageDetail.json apuntando a latest..."
-      - printf '{"ImageURI":"%s"}' $REPOSITORY_URI:latest \
-          > imageDetail.json
+      - echo "✅ Push completado."
 
 artifacts:
   files:
