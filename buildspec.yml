@@ -3,7 +3,7 @@ version: 0.2
 env:
   variables:
     AWS_DEFAULT_REGION: us-east-1
-    REPOSITORY_URI: 478681635279.dkr.ecr.us-east-1.amazonaws.com/python_app
+    REPOSITORY_URI: 118273046196.dkr.ecr.us-east-1.amazonaws.com/blacklist_app
 
 phases:
   install:
