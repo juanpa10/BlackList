@@ -1,6 +1,6 @@
 {
-  "executionRoleArn": "arn:aws:iam::478681635279:role/ecsTaskExecutionRole",
-  "family": "Task-app-python",
+  "executionRoleArn": "arn:aws:iam::118273046196:role/ecsTaskExecutionRole",
+  "family": "Task-blacklist-app",
   "networkMode": "awsvpc",
   "requiresCompatibilities": [
     "FARGATE"
@@ -9,7 +9,7 @@
   "memory": "1024",
   "containerDefinitions": [
     {
-      "name": "Container-app-python",
+      "name": "Container-blacklist-app",
       "image": "<IMAGE1_NAME>",
       "essential": true,
       "portMappings": [
