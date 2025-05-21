@@ -12,7 +12,7 @@ RUN pip install newrelic
 ENV NEW_RELIC_APP_NAME="application"
 ENV NEW_RELIC_LOG=stdout
 ENV NEW_RELIC_DISTRIBUTED_TRACING_ENABLED=true
-ENV NEW_RELIC_LOG_LEVEL=info
+ENV NEW_RELIC_LOG_LEVEL=debug
 # NO pongas la license aquí, ponla como variable de entorno en ECS/Fargate
 
 EXPOSE 5000
