@@ -22,7 +22,7 @@
       "environment": [
         {
           "name": "NEW_RELIC_LICENSE_KEY",
-          "value": "7B3FE90F578CF5834E0EB4FF0E824834FE19F2A19BD20720F76151C2A4770B9D"
+          "value": "24e040754b316deb16cd01421041e790FFFFNRAL"
         },
         {
           "name": "NEW_RELIC_APP_NAME",
