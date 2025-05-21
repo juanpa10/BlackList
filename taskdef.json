@@ -18,6 +18,28 @@
           "hostPort": 5000,
           "protocol": "tcp"
         }
+      ],
+      "environment": [
+        {
+          "name": "NEW_RELIC_LICENSE_KEY",
+          "value": "7B3FE90F578CF5834E0EB4FF0E824834FE19F2A19BD20720F76151C2A4770B9D"
+        },
+        {
+          "name": "NEW_RELIC_APP_NAME",
+          "value": "application"
+        },
+        {
+          "name": "NEW_RELIC_LOG",
+          "value": "stdout"
+        },
+        {
+          "name": "NEW_RELIC_DISTRIBUTED_TRACING_ENABLED",
+          "value": "true"
+        },
+        {
+          "name": "NEW_RELIC_LOG_LEVEL",
+          "value": "info"
+        }
       ]
     }
   ]
